@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.department.mapper.DepartmentMapper">
+    
+    <resultMap type="Department" id="DepartmentResult">
+        <result property="departmentId"    column="department_id"    />
+        <result property="departmentName"    column="department_name"    />
+        <result property="departmentType"    column="department_type"    />
+        <result property="departmentNum"    column="department_num"    />
+    </resultMap>
+
+    <resultMap id="DepartmentLessonResult" type="Department" extends="DepartmentResult">
+        <collection property="lessonList" notNullColumn="sub_lesson_id" javaType="java.util.List" resultMap="LessonResult" />
+    </resultMap>
+
+    <resultMap type="Lesson" id="LessonResult">
+        <result property="lessonId"    column="sub_lesson_id"    />
+        <result property="lessonName"    column="sub_lesson_name"    />
+        <result property="lessonType"    column="sub_lesson_type"    />
+        <result property="lessonNum"    column="sub_lesson_num"    />
+        <result property="departmentId"    column="sub_department_id"    />
+    </resultMap>
+
+    <sql id="selectDepartmentVo">
+        select department_id, department_name, department_type, department_num from department
+    </sql>
+
+    <select id="selectDepartmentList" parameterType="Department" resultMap="DepartmentResult">
+        <include refid="selectDepartmentVo"/>
+        <where>  
+            <if test="departmentName != null  and departmentName != ''"> and department_name like concat('%', #{departmentName}, '%')</if>
+            <if test="departmentType != null  and departmentType != ''"> and department_type = #{departmentType}</if>
+            <if test="departmentNum != null "> and department_num = #{departmentNum}</if>
+        </where>
+    </select>
+    
+    <select id="selectDepartmentByDepartmentId" parameterType="Long" resultMap="DepartmentLessonResult">
+        select a.department_id, a.department_name, a.department_type, a.department_num,
+ b.lesson_id as sub_lesson_id, b.lesson_name as sub_lesson_name, b.lesson_type as sub_lesson_type, b.lesson_num as sub_lesson_num, b.department_id as sub_department_id
+        from department a
+        left join lesson b on b.department_id = a.department_id
+        where a.department_id = #{departmentId}
+    </select>
+        
+    <insert id="insertDepartment" parameterType="Department" useGeneratedKeys="true" keyProperty="departmentId">
+        insert into department
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="departmentName != null and departmentName != ''">department_name,</if>
+            <if test="departmentType != null and departmentType != ''">department_type,</if>
+            <if test="departmentNum != null">department_num,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="departmentName != null and departmentName != ''">#{departmentName},</if>
+            <if test="departmentType != null and departmentType != ''">#{departmentType},</if>
+            <if test="departmentNum != null">#{departmentNum},</if>
+         </trim>
+    </insert>
+
+    <update id="updateDepartment" parameterType="Department">
+        update department
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="departmentName != null and departmentName != ''">department_name = #{departmentName},</if>
+            <if test="departmentType != null and departmentType != ''">department_type = #{departmentType},</if>
+            <if test="departmentNum != null">department_num = #{departmentNum},</if>
+        </trim>
+        where department_id = #{departmentId}
+    </update>
+
+    <delete id="deleteDepartmentByDepartmentId" parameterType="Long">
+        delete from department where department_id = #{departmentId}
+    </delete>
+
+    <delete id="deleteDepartmentByDepartmentIds" parameterType="String">
+        delete from department where department_id in 
+        <foreach item="departmentId" collection="array" open="(" separator="," close=")">
+            #{departmentId}
+        </foreach>
+    </delete>
+    
+    <delete id="deleteLessonByDepartmentIds" parameterType="String">
+        delete from lesson where department_id in 
+        <foreach item="departmentId" collection="array" open="(" separator="," close=")">
+            #{departmentId}
+        </foreach>
+    </delete>
+
+    <delete id="deleteLessonByDepartmentId" parameterType="Long">
+        delete from lesson where department_id = #{departmentId}
+    </delete>
+
+    <insert id="batchLesson">
+        insert into lesson( lesson_id, lesson_name, lesson_type, lesson_num, department_id) values
+		<foreach item="item" index="index" collection="list" separator=",">
+            ( #{item.lessonId}, #{item.lessonName}, #{item.lessonType}, #{item.lessonNum}, #{item.departmentId})
+        </foreach>
+    </insert>
+
+</mapper>

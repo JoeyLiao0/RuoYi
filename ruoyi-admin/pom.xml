@@ -73,6 +73,12 @@
             <version>${ruoyi.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.ruoyi</groupId>
+            <artifactId>ruoyi-department</artifactId>
+            <version>${ruoyi.version}</version>
+        </dependency>
+
     </dependencies>
 
     <build>
